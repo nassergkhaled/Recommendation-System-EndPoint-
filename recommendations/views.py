@@ -1,9 +1,9 @@
-from rest_framework import generics
+from rest_framework import generics, viewsets
 from rest_framework.exceptions import NotFound
 import numpy as np
 from django.db.models import Avg
 from .models import User, Apartment, UserInteraction
-from .serializers import UserSerializer, ApartmentSerializer
+from .serializers import UserSerializer, ApartmentSerializer, UserInteractionSerializer
 
 def get_recommended_apartments(user):
     interactions = UserInteraction.objects.all()
@@ -61,4 +61,16 @@ class RecommendedApartmentsView(generics.ListAPIView):
             raise NotFound('User not found')
 
         return get_recommended_apartments(user)
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+class ApartmentViewSet(viewsets.ModelViewSet):
+    queryset = Apartment.objects.all()
+    serializer_class = ApartmentSerializer
+
+class UserInteractionViewSet(viewsets.ModelViewSet):
+    queryset = UserInteraction.objects.all()
+    serializer_class = UserInteractionSerializer
 
