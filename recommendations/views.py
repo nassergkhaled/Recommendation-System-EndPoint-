@@ -1,7 +1,6 @@
 from rest_framework import generics, viewsets
 from rest_framework.exceptions import NotFound
 import numpy as np
-from django.db.models import Avg
 from .models import User, Apartment, UserInteraction
 from .serializers import UserSerializer, ApartmentSerializer, UserInteractionSerializer
 
@@ -38,11 +37,19 @@ def get_recommended_apartments(user):
     similarities.sort(key=lambda x: x[1], reverse=True)
 
     recommended_apartments = []
+    recommended_scores = []
+
     for similar_user_id, _ in similarities[:5]:
         similar_user_ratings = ratings_matrix[user_ids.index(similar_user_id)]
         for apartment_index, rating in enumerate(similar_user_ratings):
             if rating > 0 and user_ratings[apartment_index] == 0:
-                recommended_apartments.append(Apartment.objects.get(id=apartment_ids[apartment_index]))
+                apartment = Apartment.objects.get(id=apartment_ids[apartment_index])
+                recommended_apartments.append(apartment)
+                recommended_scores.append(rating)
+
+    for apartment, score in zip(recommended_apartments, recommended_scores):
+        apartment.recommended_score = (apartment.recommended_score + score) / 2.0
+        apartment.save()
 
     return recommended_apartments
 
